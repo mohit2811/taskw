@@ -5,6 +5,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
     <TextView
         android:id="@+id/addproduct"
@@ -191,19 +197,12 @@
             android:onClick="addImages"
             android:id="@+id/imagebut"
             android:text="@string/add_more_images" />
-        <HorizontalScrollView
+        <androidx.recyclerview.widget.RecyclerView
             android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_below="@id/imagebut"
-            android:layout_height="wrap_content">
-
-       <LinearLayout
-           android:layout_width="match_parent"
-           android:layout_height="wrap_content"
-           android:id="@+id/imageContainer"
-
-           android:layout_margin="@dimen/margin10"
-           android:orientation="horizontal" />
-        </HorizontalScrollView>
+            android:id="@+id/recyclerView"
+             android:layout_margin="@dimen/margin10"/>
     </RelativeLayout>
 
     <Button
@@ -225,5 +224,8 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         android:visibility="gone"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

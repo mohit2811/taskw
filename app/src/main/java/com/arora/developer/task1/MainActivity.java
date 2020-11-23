@@ -21,6 +21,8 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.Request;
 import com.android.volley.VolleyError;
@@ -54,7 +56,8 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String> category, idlist;
     ArrayList<Uri> images;
     int PICK_IMAGE_MULTIPLE = 1;
-    LinearLayout imageContainer;
+   // LinearLayout imageContainer;
+    RecyclerView recyclerView;
     ArrayList<Bitmap> imagesEncodedList;
 
     @Override
@@ -126,8 +129,8 @@ public class MainActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         imagesEncodedList = new ArrayList<>();
         images = new ArrayList<Uri>();
-        imageContainer = findViewById(R.id.imageContainer);
-        //recyclerView=findViewById(R.id.recyclerView);
+        //imageContainer = findViewById(R.id.imageContainer);
+        recyclerView=findViewById(R.id.recyclerView);
         myCalendar = Calendar.getInstance();
         spinner = findViewById(R.id.spinner);
         nameEdit = findViewById(R.id.nameEditTxt);
@@ -221,53 +224,31 @@ public class MainActivity extends AppCompatActivity {
                 ClipData mClipData = data.getClipData();
 
                 // String imagepath = getPath(data.getData().getPath());
-                imageContainer.removeAllViews();
                 int pickedImageCount;
 
                 for (pickedImageCount = 0; pickedImageCount < mClipData.getItemCount();
                      pickedImageCount++) {
-                    final ImageView productImageView =
-                            new ImageView(MainActivity.this);
-
-
-                    productImageView.setAdjustViewBounds(true);
-                    productImageView.setScaleType(ImageView.ScaleType.FIT_XY);
-
-                    productImageView.setLayoutParams(new LinearLayout
-                            .LayoutParams(200,
-                            200));
-
-                    imageContainer.addView(productImageView);
-                    Picasso.get().load(mClipData.getItemAt(pickedImageCount).getUri()).error(R.drawable.bg).into(new com.squareup.picasso.Target() {
-                        @Override
-                        public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-
-                            imagesEncodedList.add(bitmap);
-                            productImageView.setImageBitmap(bitmap);
-                        }
-
-                        @Override
-                        public void onBitmapFailed(Exception e, Drawable errorDrawable) {
-                            System.out.println(e);
-                            productImageView.setImageDrawable(getResources().getDrawable(R.drawable.bg));
-                        }
-
-                        @Override
-                        public void onPrepareLoad(Drawable placeHolderDrawable) {
-
-                        }
-                    });
+                    images.add(mClipData.getItemAt(pickedImageCount).getUri());
                 }
+                   setAdapter(images);
+
 
             } else {
                 Toast.makeText(MainActivity.this, "You haven't picked any Image",
                         Toast.LENGTH_LONG).show();
             }
         } catch (Exception e) {
-            Toast.makeText(MainActivity.this, "Error: Something went wrong " + e.getMessage(), Toast.LENGTH_LONG)
+            Toast.makeText(MainActivity.this, "please pick multiple images ", Toast.LENGTH_LONG)
                     .show();
         }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void setAdapter(ArrayList<Uri> images) {
+        Adapter adapter = new Adapter(images, MainActivity.this,imagesEncodedList,progressBar);
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(MainActivity.this, LinearLayoutManager.HORIZONTAL, true);
+        recyclerView.setLayoutManager(mLayoutManager);
+        recyclerView.setAdapter(adapter);
     }
 
     public byte[] bitmapToByte(Bitmap bitmap) {
