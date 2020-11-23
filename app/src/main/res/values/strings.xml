@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Task1</string>
+    <string name="add_product">Add Product</string>
+    <string name="category">Category</string>
+    <string name="name">Name</string>
+    <string name="desc">Desription</string>
+    <string name="ExpiryDate">Expiry</string>
+    <string name="image">Images</string>
+    <string name="add_more_images">Add More Images</string>
+    <string name="todo">TODO</string>
+    <string name="save">Save</string>
+</resources>
