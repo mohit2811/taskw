@@ -51,7 +51,6 @@ public class Adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
                 progressBar.setVisibility(View.GONE);
                 bitmaps.add(bitmap);
-
                 holderr.image.setImageBitmap(bitmap);
             }
 
