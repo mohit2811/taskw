@@ -4,7 +4,6 @@ import android.app.DatePickerDialog;
 import android.content.ClipData;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -14,8 +13,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.DatePicker;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -24,12 +21,18 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.NetworkResponse;
+
 import com.android.volley.Request;
+import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
-import com.squareup.picasso.Picasso;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -38,13 +41,15 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
-import okhttp3.Response;
+
 
 public class MainActivity extends AppCompatActivity {
     EditText nameEdit, descEdit, expiryEdit;
@@ -183,8 +188,10 @@ public class MainActivity extends AppCompatActivity {
     public void save(View view) {
         if (validateData()) {
             try {
-                progressBar.setVisibility(View.VISIBLE);
-                new uploadSelctedIMG().execute();
+              //  progressBar.setVisibility(View.VISIBLE);
+                saveProfileAccount();
+                // volleyRequest();
+                //new uploadSelctedIMG().execute();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -222,8 +229,6 @@ public class MainActivity extends AppCompatActivity {
                 // Get the Image from data
 
                 ClipData mClipData = data.getClipData();
-
-                // String imagepath = getPath(data.getData().getPath());
                 int pickedImageCount;
 
                 for (pickedImageCount = 0; pickedImageCount < mClipData.getItemCount();
@@ -262,83 +267,58 @@ public class MainActivity extends AppCompatActivity {
         return imageBytes;
     }
 
-    class uploadSelctedIMG extends AsyncTask<String, String, Boolean> {
 
+    private void saveProfileAccount() {
+        // loading or check internet connection or something...
+        // ... then
+        String url = "http://dev1.xicom.us/xttest/save_user.php";
+        VolleyMultipartRequest multipartRequest = new VolleyMultipartRequest(Request.Method.POST, url, new Response.Listener<NetworkResponse>() {
+            @Override
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
+            public void onResponse(NetworkResponse response) {
+                String resultResponse = new String(response.data);
+                try {
+                    JSONObject result = new JSONObject(resultResponse);
+                    String status = result.getString("status");
 
-        }
+                    if (status.equals("success"))
+                    {
+                        Toast.makeText(MainActivity.this, "Success", Toast.LENGTH_SHORT).show();
+                    }
 
-        protected Boolean doInBackground(String... arg0) {
-            try {
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
 
-                //save bitmap to file
-
-                File tempFile = new File(getApplicationContext().getCacheDir(), "image.jpg");
-
-                tempFile.createNewFile();
-
-                FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
-                for (int i = 0; i < imagesEncodedList.size(); i++)
-                    fileOutputStream.write(bitmapToByte(imagesEncodedList.get(i)));
-
-                fileOutputStream.flush();
-
-                fileOutputStream.close();
-
-                //Upload data
-                OkHttpClient client = new OkHttpClient().newBuilder()
-                        .build();
-                MediaType mediaType = MediaType.parse("text/plain");
-                RequestBody body = new MultipartBody.Builder().setType(MultipartBody.FORM)
-                        .addFormDataPart("category_id", idd)
-                        .addFormDataPart("name", name)
-                        .addFormDataPart("desc", desc)
-                        .addFormDataPart("expiry", expiry)
-                        .addFormDataPart("product_image[0]", tempFile.getAbsolutePath(),
-                                RequestBody.create(MediaType.parse("application/octet-stream"),
-                                        new File(tempFile.getAbsolutePath())))
-                        .build();
-
-                okhttp3.Request request = new okhttp3.Request.Builder()
-                        .url("http://dev1.xicom.us/xttest/save_user.php")
-                        .method("POST", body)
-                        .build();
-                Response response = null;
-
-                response = client.newCall(request).execute();
-                if (response.code() == 200)
-                    return true;
-
-                Log.d("upload image response ", response.body().string());
-
-            } catch (IOException ex) {
-                ex.printStackTrace();
-
-                //  Toast.makeText(DetailedActivity.this, "mm"+ex , Toast.LENGTH_SHORT).show();
-
-                Log.d("upload error ", ex.getMessage());
-
-
+        }}) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("category_id", idd);
+                params.put("name", name);
+                params.put("desc", desc);
+                params.put("expiry", expiry);
+                return params;
             }
 
-            return false;
-        }
+            @Override
+            protected Map<String, DataPart> getByteData() {
+                Map<String, DataPart> params = new HashMap<>();
+                // file name could found file base or direct access from real path
+                // for now just get bitmap data from ImageView
+                for (int i =0 ;i<imagesEncodedList.size();i++)
+                {
+                    params.put("product_image["+i+"]", new DataPart("images"+i,bitmapToByte(imagesEncodedList.get(i)),"image/jpeg"));
+                }
+                return params;
+            }
+        };
 
-        @Override
-        protected void onPostExecute(Boolean result) {
-            // TODO Auto-generated method stub
-            super.onPostExecute(result);
-
-            //if successful upload
-            progressBar.setVisibility(View.GONE);
-
-            if (result)
-                Toast.makeText(MainActivity.this, "Success", Toast.LENGTH_SHORT).show();
-        }
-
+        VolleySingleton.getInstance(getBaseContext()).addToRequestQueue(multipartRequest);
     }
 
 }
